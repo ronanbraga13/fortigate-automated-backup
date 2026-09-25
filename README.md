@@ -21,6 +21,27 @@ Servidor Ubuntu
 
 O envio é iniciado pelo próprio FortiGate usando `execute backup config sftp` dentro de um Automation Stitch agendado. O projeto não depende do Oxidized.
 
+
+## Topologia do LAB
+
+O LAB foi montado com três localidades: **MATRIZ, MINAS e RIO**. A comunicação entre os sites ocorre através de **VPN IPsec**, com **BGP** para troca de rotas e **redundância de links**.
+
+O servidor de backup está na rede interna da MATRIZ. Os FortiGates remotos alcançam esse servidor pelas redes privadas anunciadas através das VPNs.
+
+O tráfego de backup **não utiliza acesso direto pela rede pública**. A Internet é utilizada apenas como transporte dos túneis IPsec; o envio do arquivo de configuração ocorre pela comunicação interna entre os sites.
+
+Fluxo simplificado:
+
+```text
+MINAS ── VPN IPsec / BGP ──┐
+                            │
+RIO   ── VPN IPsec / BGP ──┼── MATRIZ ── Servidor SFTP
+                            │
+MATRIZ ─────────────────────┘
+```
+
+A topologia também possui links redundantes, permitindo continuidade da comunicação entre as redes em caso de indisponibilidade de um dos caminhos.
+
 ## Ambiente validado no LAB
 
 - Ubuntu Server 22.04 LTS
