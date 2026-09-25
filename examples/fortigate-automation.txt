@@ -4,11 +4,10 @@
 # Substitua:
 #   <LOCALIDADE>
 #   <NOME_FIREWALL>
-#   <CLIENTE>
+#   <GRP>
 #   <IP_SFTP>
 #   <SFTP_PASSWORD>
 #
-# Nunca publique uma senha real no GitHub.
 
 config system automation-trigger
     edit "TRG_BACKUP_<NOME_FIREWALL>"
@@ -22,7 +21,7 @@ end
 config system automation-action
     edit "ACT_BACKUP_<NOME_FIREWALL>"
         set action-type cli-script
-        set script "execute backup config sftp /backup/fortigate/<CLIENTE>/<LOCALIDADE>/<NOME_FIREWALL>/<NOME_FIREWALL>_%%date%%.conf <IP_SFTP> fortibackup <SFTP_PASSWORD>"
+        set script "execute backup config sftp /backup/fortigate/<GRP>/<LOCALIDADE>/<NOME_FIREWALL>/<NOME_FIREWALL>_%%date%%.conf <IP_SFTP> fortibackup <SFTP_PASSWORD>"
         set accprofile "super_admin"
     next
 end
@@ -47,4 +46,4 @@ diagnose automation test ST_BACKUP_<NOME_FIREWALL>
 execute ping <IP_SFTP>
 
 # Backup manual:
-execute backup config sftp /backup/fortigate/<CLIENTE>/<LOCALIDADE>/<NOME_FIREWALL>/<NOME_FIREWALL>.conf <IP_SFTP> fortibackup <SFTP_PASSWORD>
+execute backup config sftp /backup/fortigate/<GRP>/<LOCALIDADE>/<NOME_FIREWALL>/<NOME_FIREWALL>.conf <IP_SFTP> fortibackup <SFTP_PASSWORD>
