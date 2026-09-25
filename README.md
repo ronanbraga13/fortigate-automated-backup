@@ -61,7 +61,7 @@ sudo ./01-install-backup-server.sh
 
 O script:
 
-- instala OpenSSH Server, cron, tzdata, tree e iptables;
+- instala OpenSSH Server, cron, tzdata e tree;
 - valida/corrige o timezone para `America/Sao_Paulo`;
 - habilita sincronização NTP;
 - cria/valida o usuário `fortibackup`;
@@ -72,7 +72,6 @@ O script:
 - agenda a retenção diariamente às 04:30;
 - testa escrita no diretório de backup;
 - valida SSH, cron e timezone;
-- possui opção de allowlist TCP/22 via iptables.
 
 Se o usuário `fortibackup` for criado pelo script, defina uma senha forte:
 
@@ -241,23 +240,13 @@ O instalador aplica um bloco específico do OpenSSH ao usuário `fortibackup`:
 
 Isso reduz a exposição da conta destinada exclusivamente aos backups.
 
-### iptables no Ubuntu
+### Firewall do servidor
 
-É recomendado permitir TCP/22 somente dos IPs dos FortiGates autorizados e das redes/IPs de administração.
+Como recomendação de segurança, restrinja o acesso à porta TCP/22 somente aos IPs dos FortiGates autorizados e às redes/IPs de administração.
 
-O instalador contém:
+Essa proteção **não é aplicada pelo script de instalação**. A política de firewall deve ser planejada e aplicada separadamente, de acordo com o ambiente do cliente.
 
-```bash
-APPLY_IPTABLES=false
-ALLOWED_SSH_IPS=(
-  # "IP_DO_FORTIGATE"
-  # "REDE_DE_ADMINISTRACAO/CIDR"
-)
-```
-
-Por segurança, o script **não ativa a regra automaticamente** enquanto a allowlist não for revisada.
-
-Antes de usar `APPLY_IPTABLES=true`, inclua também o IP/rede de onde o servidor é administrado. SFTP e SSH utilizam TCP/22; uma allowlist incompleta pode bloquear seu próprio acesso administrativo.
+No Linux, podem ser utilizados mecanismos como `iptables`, `nftables` ou o firewall adotado pela distribuição.
 
 Exemplo conceitual:
 
@@ -267,6 +256,8 @@ ALLOW TCP/22 from FortiGate B
 ALLOW TCP/22 from rede de administração
 DROP  TCP/22 from demais origens
 ```
+
+> Atenção: SFTP e SSH administrativo utilizam TCP/22. Antes de restringir a porta, garanta que os IPs/redes usados para administração também estejam permitidos, evitando perda de acesso ao servidor.
 
 ### Windows Firewall
 
