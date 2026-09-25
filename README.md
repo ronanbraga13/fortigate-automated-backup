@@ -4,7 +4,7 @@ Automação de backup de configurações FortiGate utilizando SFTP, com agendame
 
 ## Objetivo
 
-Este projeto implementa um servidor central de backup para múltiplos clientes, localidades e FortiGates.
+Este projeto implementa um servidor central de backup para múltiplos grupos, localidades e FortiGates.
 
 Fluxo:
 
@@ -15,7 +15,7 @@ FortiGate
    v
 Servidor Ubuntu
    |
-   +-- /backup/fortigate/CLIENTE/LOCALIDADE/FIREWALL/
+   +-- /backup/fortigate/GRP/LOCALIDADE/FIREWALL/
        +-- FGT-NOME_YYYY-MM-DD.conf
 ```
 
@@ -29,7 +29,7 @@ O envio é iniciado pelo próprio FortiGate usando `execute backup config sftp` 
 - Backup diário
 - Retenção padrão: 30 dias
 - Timezone do servidor: `America/Sao_Paulo`
-- Estrutura multi-cliente e multi-site
+- Estrutura multi-grupo e multi-site
 
 > Outros releases do FortiOS devem ser conferidos na documentação da versão correspondente. Sintaxe, variáveis e comportamento de Automation Stitch podem variar entre versões.
 
@@ -79,21 +79,20 @@ Se o usuário `fortibackup` for criado pelo script, defina uma senha forte:
 sudo passwd fortibackup
 ```
 
-Nunca publique a senha SFTP no GitHub.
 
 ## Estrutura de diretórios
 
 Padrão adotado:
 
 ```text
-CLIENTE / LOCALIDADE / FIREWALL / BACKUP
+GRP / LOCALIDADE / FIREWALL / BACKUP
 ```
 
 Exemplo:
 
 ```text
 /backup/fortigate
-└── CLIENTE_LAB
+└── GRP_LAB
     ├── MATRIZ
     │   └── FGT-MATRIZ-01
     │       └── FGT-MATRIZ-01_2026-09-25.conf
@@ -149,13 +148,13 @@ A sincronização é importante porque o nome diário usa a data obtida pelo For
 Exemplo:
 
 ```bash
-execute backup config sftp /backup/fortigate/CLIENTE_LAB/RIO/FGT-RIO-01/FGT-RIO-01.conf <IP_SFTP> fortibackup <SFTP_PASSWORD>
+execute backup config sftp /backup/fortigate/GRP_LAB/RIO/FGT-RIO-01/FGT-RIO-01.conf <IP_SFTP> fortibackup <SFTP_PASSWORD>
 ```
 
 Valide no Ubuntu:
 
 ```bash
-ls -lh /backup/fortigate/CLIENTE_LAB/RIO/FGT-RIO-01/
+ls -lh /backup/fortigate/GRP_LAB/RIO/FGT-RIO-01/
 ```
 
 ### Automation Stitch diário
@@ -175,7 +174,7 @@ end
 config system automation-action
     edit "ACT_BACKUP_FGT_RIO"
         set action-type cli-script
-        set script "execute backup config sftp /backup/fortigate/CLIENTE_LAB/RIO/FGT-RIO-01/FGT-RIO-01_%%date%%.conf <IP_SFTP> fortibackup <SFTP_PASSWORD>"
+        set script "execute backup config sftp /backup/fortigate/GRP_LAB/RIO/FGT-RIO-01/FGT-RIO-01_%%date%%.conf <IP_SFTP> fortibackup <SFTP_PASSWORD>"
         set accprofile "super_admin"
     next
 end
@@ -240,11 +239,17 @@ O instalador aplica um bloco específico do OpenSSH ao usuário `fortibackup`:
 
 Isso reduz a exposição da conta destinada exclusivamente aos backups.
 
+### Porta SSH/SFTP
+
+Como medida adicional de endurecimento, pode-se alterar a porta padrão do SSH/SFTP para uma porta não padrão. Isso ajuda a reduzir ruído de varreduras automatizadas, mas **não substitui** controles como firewall por origem, autenticação forte, atualização do sistema e restrição do usuário SFTP.
+
+Se a porta for alterada, ajuste de forma consistente o OpenSSH do servidor, as regras de firewall e os comandos/configurações do FortiGate que apontam para o serviço SFTP.
+
 ### Firewall do servidor
 
 Como recomendação de segurança, restrinja o acesso à porta TCP/22 somente aos IPs dos FortiGates autorizados e às redes/IPs de administração.
 
-Essa proteção **não é aplicada pelo script de instalação**. A política de firewall deve ser planejada e aplicada separadamente, de acordo com o ambiente do cliente.
+Essa proteção **não é aplicada pelo script de instalação**. A política de firewall deve ser planejada e aplicada separadamente, de acordo com o ambiente.
 
 No Linux, podem ser utilizados mecanismos como `iptables`, `nftables` ou o firewall adotado pela distribuição.
 
@@ -328,7 +333,7 @@ Antes de restaurar em produção:
 
 ## Avisos
 
-- Não armazene senhas reais, IPs sensíveis ou configurações de clientes neste repositório público.
+- Não armazene senhas reais, IPs sensíveis ou configurações reais neste repositório público.
 - Use placeholders nos exemplos.
 - Restrinja o acesso ao servidor SFTP.
 - Monitore espaço em disco e sucesso dos backups.
