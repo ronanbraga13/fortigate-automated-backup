@@ -1,0 +1,16 @@
+# Backups e configuracoes reais
+*.conf
+*.cfg
+*.bak
+
+# Segredos / credenciais
+.env
+*.key
+*.pem
+secrets/
+credentials/
+
+# Arquivos temporarios
+*.log
+*.tmp
+*~
