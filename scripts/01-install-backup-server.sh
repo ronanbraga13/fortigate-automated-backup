@@ -24,16 +24,6 @@ DEVICES=(
   "RIO:FGT-RIO-01"
 )
 
-# Firewall opcional.
-# IMPORTANTE: a porta 22 e usada tanto por SFTP quanto por SSH administrativo.
-# So habilite depois de preencher TODOS os IPs que precisam acessar TCP/22,
-# incluindo FortiGates e IPs/redes de administracao.
-APPLY_IPTABLES=false
-ALLOWED_SSH_IPS=(
-  # "10.0.20.1"
-  # "10.0.20.0/24"
-)
-
 log()  { printf '[+] %s\n' "$*"; }
 warn() { printf '[!] %s\n' "$*" >&2; }
 die()  { printf '[ERRO] %s\n' "$*" >&2; exit 1; }
@@ -44,7 +34,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 log "Atualizando repositorios e instalando dependencias..."
 apt-get update
-apt-get install -y openssh-server tzdata cron tree iptables
+apt-get install -y openssh-server tzdata cron tree
 
 log "Validando timezone..."
 CURRENT_TZ="$(timedatectl show -p Timezone --value 2>/dev/null || true)"
@@ -120,30 +110,6 @@ printf '%s\n' "${CRON_LINE}" >> "${TMP_CRON}"
 crontab "${TMP_CRON}"
 rm -f "${TMP_CRON}"
 
-if [[ "${APPLY_IPTABLES}" == "true" ]]; then
-  ((${#ALLOWED_SSH_IPS[@]} > 0)) || die "APPLY_IPTABLES=true, mas ALLOWED_SSH_IPS esta vazio."
-
-  log "Aplicando allowlist de TCP/22 via iptables..."
-  iptables -C INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT 2>/dev/null || \
-    iptables -I INPUT 1 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-
-  for src in "${ALLOWED_SSH_IPS[@]}"; do
-    iptables -C INPUT -p tcp -s "${src}" --dport 22 -j ACCEPT 2>/dev/null || \
-      iptables -I INPUT 2 -p tcp -s "${src}" --dport 22 -j ACCEPT
-  done
-
-  iptables -C INPUT -p tcp --dport 22 -j DROP 2>/dev/null || \
-    iptables -A INPUT -p tcp --dport 22 -j DROP
-
-  if ! dpkg -s iptables-persistent >/dev/null 2>&1; then
-    apt-get install -y iptables-persistent
-  fi
-  mkdir -p /etc/iptables
-  iptables-save > /etc/iptables/rules.v4
-else
-  warn "iptables NAO foi alterado. Para restringir TCP/22, revise ALLOWED_SSH_IPS e mude APPLY_IPTABLES=true."
-fi
-
 log "Executando validacoes..."
 systemctl is-active --quiet ssh || die "Servico SSH nao esta ativo."
 systemctl is-active --quiet cron || die "Servico cron nao esta ativo."
@@ -177,4 +143,3 @@ if [[ "${USER_CREATED}" == "true" ]]; then
 fi
 
 warn "Confirme que FortiGate e servidor estao sincronizados em data/hora e fuso horario."
-warn "Em producao, restrinja TCP/22 aos IPs dos FortiGates e redes/IPs de administracao."
