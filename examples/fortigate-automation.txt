@@ -1,0 +1,50 @@
+# FortiGate - exemplo de Automation Stitch para backup diario via SFTP
+# LAB validado em FortiOS 7.2.8
+#
+# Substitua:
+#   <LOCALIDADE>
+#   <NOME_FIREWALL>
+#   <CLIENTE>
+#   <IP_SFTP>
+#   <SFTP_PASSWORD>
+#
+# Nunca publique uma senha real no GitHub.
+
+config system automation-trigger
+    edit "TRG_BACKUP_<NOME_FIREWALL>"
+        set trigger-type scheduled
+        set trigger-frequency daily
+        set trigger-hour 03
+        set trigger-minute 10
+    next
+end
+
+config system automation-action
+    edit "ACT_BACKUP_<NOME_FIREWALL>"
+        set action-type cli-script
+        set script "execute backup config sftp /backup/fortigate/<CLIENTE>/<LOCALIDADE>/<NOME_FIREWALL>/<NOME_FIREWALL>_%%date%%.conf <IP_SFTP> fortibackup <SFTP_PASSWORD>"
+        set accprofile "super_admin"
+    next
+end
+
+config system automation-stitch
+    edit "ST_BACKUP_<NOME_FIREWALL>"
+        set status enable
+        set trigger "TRG_BACKUP_<NOME_FIREWALL>"
+        config actions
+            edit 1
+                set action "ACT_BACKUP_<NOME_FIREWALL>"
+                set required enable
+            next
+        end
+    next
+end
+
+# Teste:
+diagnose automation test ST_BACKUP_<NOME_FIREWALL>
+
+# Validacao manual de conectividade antes da automacao:
+execute ping <IP_SFTP>
+
+# Backup manual:
+execute backup config sftp /backup/fortigate/<CLIENTE>/<LOCALIDADE>/<NOME_FIREWALL>/<NOME_FIREWALL>.conf <IP_SFTP> fortibackup <SFTP_PASSWORD>
