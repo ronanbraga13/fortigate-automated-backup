@@ -15,9 +15,9 @@ RETENTION_SCRIPT="/usr/local/bin/fortigate-backup-retention.sh"
 RETENTION_LOG="/var/log/fortigate-backup-retention.log"
 
 # Estrutura de exemplo do LAB.
-# Ajuste CLIENT_NAME e DEVICES antes de usar em outro ambiente.
+# Ajuste GROUP_NAME e DEVICES antes de usar em outro ambiente.
 CREATE_LAB_STRUCTURE=true
-CLIENT_NAME="CLIENTE_LAB"
+GROUP_NAME="GRP_LAB"
 DEVICES=(
   "MATRIZ:FGT-MATRIZ-01"
   "MINAS:FGT-MINAS-01"
@@ -73,12 +73,12 @@ log "Criando diretorio base..."
 install -d -o "${SFTP_USER}" -g "${SFTP_USER}" -m 0750 "${BACKUP_ROOT}"
 
 if [[ "${CREATE_LAB_STRUCTURE}" == "true" ]]; then
-  log "Criando estrutura multi-cliente do LAB..."
+  log "Criando estrutura multi-grupo do LAB..."
   for entry in "${DEVICES[@]}"; do
     site="${entry%%:*}"
     device="${entry#*:}"
     install -d -o "${SFTP_USER}" -g "${SFTP_USER}" -m 0750 \
-      "${BACKUP_ROOT}/${CLIENT_NAME}/${site}/${device}"
+      "${BACKUP_ROOT}/${GROUP_NAME}/${site}/${device}"
   done
 fi
 
