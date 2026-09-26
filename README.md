@@ -24,7 +24,7 @@ O envio é iniciado pelo próprio FortiGate usando `execute backup config sftp` 
 
 ## Topologia do LAB
 
-![Topologia do LAB](docsimagestopologialab.png)
+![Topologia do LAB](docsimagestopologialab2.png)
 
 O LAB foi montado com três localidades: **MATRIZ, MINAS e RIO**. A comunicação entre os sites ocorre através de **VPN IPsec**, com **BGP** para troca de rotas e **redundância de links**.
 
